@@ -74,11 +74,13 @@
 <body>
     <div class="container">
         <h1>Weather Forecast</h1>
-        <div class="input-group">
-            <label for="cityInput">Enter city name:</label>
-            <input type="text" id="cityInput" placeholder="e.g., London">
-            <input type="submit" value="Get Weather" onclick="weather()">
-        </div>
+        <form id="weatherForm">
+            <div class="input-group">
+                <label for="cityInput">Enter city name:</label>
+                <input type="text" id="cityInput" placeholder="e.g., London" required>
+                <input type="submit" value="Get Weather">
+            </div>
+        </form>
         <div class="weather-info">
             Max Temp: <p id="maxtemp"></p>
             Min Temp: <p id="mintemp"></p>
@@ -94,9 +96,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        let myChart; 
+        let myChart;
 
-        async function weather() {
+        async function weather(event) {
+            event.preventDefault();
             const city = document.getElementById("cityInput").value;
             const apiKey = 'e2d74f4d26b97ad02a7ffa5a07234822';
             const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
@@ -105,24 +108,23 @@
                 const response = await fetch(url);
                 const data = await response.json();
 
-                let tempArray = [];
-                let dateArray = [];
+                let temperatureData = [];
+                let datesArray = [];
                 for (let i = 0; i < data.list.length; i += 8) {
-                    tempArray.push(data.list[i].main.temp);
+                    temperatureData.push(data.list[i].main.temp);
                     const date = data.list[i].dt_txt.split(' ')[0];
-                    dateArray.push(date);
+                    datesArray.push(date);
                 }
 
-                document.getElementById("maxtemp").textContent = Math.max(...tempArray);
-                document.getElementById("mintemp").textContent = Math.min(...tempArray);
+                document.getElementById("maxtemp").textContent = Math.max(...temperatureData);
+                document.getElementById("mintemp").textContent = Math.min(...temperatureData);
                 document.getElementById("country").textContent = data.city.country;
-                plot(tempArray, dateArray);
+                plot(temperatureData, datesArray);
             } catch (error) {
                 console.error('Error fetching weather data:', error);
             }
         }
-
-        function plot(tempArray, dateArray) {
+        function plot(temperatureData, datesArray) {
             const ctx = document.getElementById('myChart').getContext('2d');
             if (myChart) {
                 myChart.destroy();
@@ -130,10 +132,10 @@
             myChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: dateArray,
+                    labels: datesArray,
                     datasets: [{
                         label: 'Temperature',
-                        data: tempArray,
+                        data: temperatureData,
                         backgroundColor: 'rgba(255, 69, 0, 0.2)', 
                         borderColor: 'rgba(255, 69, 0, 1)', 
                         borderWidth: 1
@@ -148,6 +150,7 @@
                 }
             });
         }
+        document.getElementById('weatherForm').addEventListener('submit', weather);
     </script>
 </body>
 </html>
