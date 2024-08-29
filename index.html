@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Forecast</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff; 
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #ff4500; 
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            width: 200px;
+        }
+
+        input[type="submit"] {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #ff4500; 
+            color: white;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #e03c31; 
+        }
+
+        .weather-info {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        .weather-info p {
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        canvas {
+            max-width: 800px; 
+            height: 400px; 
+            margin: 20px auto;
+            display: block;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather Forecast</h1>
+        <div class="input-group">
+            <label for="cityInput">Enter city name:</label>
+            <input type="text" id="cityInput" placeholder="e.g., London">
+            <input type="submit" value="Get Weather" onclick="weather()">
+        </div>
+        <div class="weather-info">
+            Max Temp: <p id="maxtemp"></p>
+            Min Temp: <p id="mintemp"></p>
+            Country: <p id="country"></p>
+        </div>
+        <div>
+            <canvas id="myChart"></canvas>
+        </div>
+        <div class="footer">
+            <p>Weather data provided by OpenWeatherMap</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let myChart; 
+
+        async function weather() {
+            const city = document.getElementById("cityInput").value;
+            const apiKey = 'e2d74f4d26b97ad02a7ffa5a07234822';
+            const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                let tempArray = [];
+                let dateArray = [];
+                for (let i = 0; i < data.list.length; i += 8) {
+                    tempArray.push(data.list[i].main.temp);
+                    const date = data.list[i].dt_txt.split(' ')[0];
+                    dateArray.push(date);
+                }
+
+                document.getElementById("maxtemp").textContent = Math.max(...tempArray);
+                document.getElementById("mintemp").textContent = Math.min(...tempArray);
+                document.getElementById("country").textContent = data.city.country;
+                plot(tempArray, dateArray);
+            } catch (error) {
+                console.error('Error fetching weather data:', error);
+            }
+        }
+
+        function plot(tempArray, dateArray) {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            if (myChart) {
+                myChart.destroy();
+            }
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dateArray,
+                    datasets: [{
+                        label: 'Temperature',
+                        data: tempArray,
+                        backgroundColor: 'rgba(255, 69, 0, 0.2)', 
+                        borderColor: 'rgba(255, 69, 0, 1)', 
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
